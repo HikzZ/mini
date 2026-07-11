@@ -1,3 +1,4 @@
+
 name: BVS2022 Layout
 
 on:
@@ -18,11 +19,6 @@ jobs:
           https://aka.ms/vs/17/release/vs_community.exe `
           -OutFile vs_community.exe
 
-    - name: Cek Ukuran Folder Layout
-      shell: powershell
-      run: |
-        Get-ChildItem -Path D:\VS2022 -Recurse | Measure-Object -Property Length -Sum
-
     - name: Jalankan VSLayout
       shell: cmd
       run: |
@@ -34,15 +30,17 @@ jobs:
           --layout D:\VS2022 ^
           --lang en-US ^
           --add Microsoft.VisualStudio.Workload.NativeDesktop ^
-          --add Microsoft.VisualStudio.Workload.ManagedDesktop ^
           --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ^
           --add Microsoft.VisualStudio.Component.Windows11SDK.26100 ^
           --add Microsoft.VisualStudio.Component.VC.CMake.Project ^
-          --add Microsoft.VisualStudio.Component.VC.CoreBuildTools ^
-          --add Microsoft.VisualStudio.Component.MSBuild ^
           --passive ^
           --norestart ^
           --wait
+
+    - name: Cek Ukuran Folder Layout
+      shell: powershell
+      run: |
+        Get-ChildItem -Path D:\VS2022 -Recurse | Measure-Object -Property Length -Sum
 
     - name: Compress Build Result (High Compression)
       shell: cmd
@@ -52,13 +50,8 @@ jobs:
         7z a -mx=9 %GITHUB_WORKSPACE%\VS2022.7z D:\VS2022\
 
     - name: Upload Artifact
-      if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: VSLogs
-        path: |
-         C:\Users\runneradmin\AppData\Local\Temp\*.log
-         C:\ProgramData\Microsoft\VisualStudio\Packages\_bootstrapper\*.log
+        name: VS2022_Layout
+        path: VS2022.7z
         retention-days: 7
-
-        
