@@ -1,0 +1,58 @@
+
+name: BVS2022 Layout
+
+on:
+  workflow_dispatch: # Memungkinkan Anda menjalankan build ini secara manual lewat tombol di GitHub
+
+jobs:
+  build:
+    runs-on: windows-2022 # Menggunakan server Windows Server 2022 resmi dari GitHub
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Download VS2022 Installer
+      shell: powershell
+      run: |
+        Invoke-WebRequest `
+          https://aka.ms/vs/17/release/vs_community.exe `
+          -OutFile vs_community.exe
+
+    - name: Jalankan VSLayout
+      shell: cmd
+      run: |
+        mkdir D:\VS2022
+        echo "Memulai pengunduhan layout Visual Studio (ini butuh waktu lama)..."
+        
+        :: Menggunakan start /wait agar CMD menunggu installer selesai sepenuhnya
+        start /wait vs_community.exe ^
+          --layout D:\VS2022 ^
+          --lang en-US ^
+          --add Microsoft.VisualStudio.Workload.ManagedDesktop ^
+          --add Microsoft.VisualStudio.Workload.NativeDesktop ^
+          --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ^
+          --add Microsoft.VisualStudio.Component.Windows11SDK.26100 ^
+          --add Microsoft.VisualStudio.Component.VC.CMake.Project ^
+          --passive ^
+          --norestart ^
+          --wait
+
+    - name: Cek Ukuran Folder Layout
+      shell: powershell
+      run: |
+        Get-ChildItem -Path D:\VS2022 -Recurse | Measure-Object -Property Length -Sum
+
+    - name: Compress Build Result (High Compression)
+      shell: cmd
+      run: |
+        echo "Mengompresi hasil build dengan 7-Zip mode Ultra..."
+        :: Menyimpan file zip langsung di drive C: atau workspace untuk menghemat ruang di drive D:
+        7z a -mx=9 %GITHUB_WORKSPACE%\VS2022.7z D:\VS2022\
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: VS2022_Layout
+        path: VS2022.7z
+        retention-days: 7
